@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>nocview</title>
+        <script type="text/javascript">
+            /* <![CDATA[ */
+            var nv = { //{{{
+                URL: '/',
+                s_to_d: function(seconds) { //{{{
+                    var days    = Math.floor(seconds / 86400); 
+                    var hours   = Math.floor((seconds - (days * 86400 ))/3600)
+                    var minutes = Math.floor((seconds - (days * 86400 ) - (hours *3600 ))/60)
+                    var seconds = Math.floor((seconds - (days * 86400 ) - (hours *3600 ) -
+                                    (minutes*60)))
+                    var date = []
+                    days    == 0 || date.push(   days + 'd')
+                    hours   == 0 || date.push(  hours + 'h')
+                    minutes == 0 || date.push(minutes + 'm')
+                    seconds == 0 || date.push(seconds + 's')
+                    return date.join(' ')
+                }, //}}}
+                methods : function(obj) { //{{{
+                    var propList = '';
+                    for(var propName in obj) {
+                        if(typeof(obj[propName]) != 'undefined') {
+                            propList += (propName + ', ');
+                        }
+                    };
+                    return (propList);
+                }, //}}}
+                log: function(message) { //{{{
+                    document.getElementById('log').innerHTML = '<pre>-' + message + '-</pre>';
+                }, //}}}
+                ap: function(ary) { //{{{
+                    for (var i = 0; i < ary.length; i += 1) {
+                        nv.log('ary['+i+']: ' + ary[i]);
+                    };
+                }, //}}}
+                pp: function(pro) { //{{{
+                    var p;
+                    for (p in pro) {
+                        nv.log('pros: '+p);
+                    }
+                }, //}}}
+                clean: function(name) { //{{{
+                    return(name.replace(/[^a-zA-Z0-9\-]/g, '_'));
+                }, //}}}
+                show_clock: function() { //{{{
+                    var currentDate = new Date();
+                    var day = currentDate.getDate();
+                    var month = currentDate.getMonth();
+                    var year = currentDate.getFullYear();
+                    var hours = currentDate.getHours();
+                    var minutes = currentDate.getMinutes();
+
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    };
+                        
+                    return "<div id='hours'>"   + hours   + "</div>" +
+                        "<div id='colon'>"   + ":"     + "</div>" +
+                        "<div id='minutes'>" + minutes + "</div>"
+                }, //}}}
+                print_attempt: function(attempt, max) { //{{{
+                    var range = parseInt('0xb40000') - parseInt('0xb400');
+                    var step = Math.floor(range / max);
+                    // grue 00b400 // gelb b4b400 // rot  b40000
+                    var ret = '';
+                    for (var i=1; i <= max; i += 1) {
+                        s = (step * i);
+                        if (i > attempt) {
+                            ret += "<span class='atp'>&nbsp;</span>";
+                        } else {
+                            ret += "<span class='atp' style='background-color: #" +
+                                '777' + ";'>&nbsp;</span>";
+                                //s.toString(16) + ";'>&nbsp;</span>";
+                        }
+                    }
+                    return ret
+                    //return attempt + "/" + max
+                }, //}}}
+                opshostlink: function(hostname) { //{{{
+                    return "window.open('" + nv.URL +
+                        "cgi-bin/status.cgi?style=detail&host=" + hostname + "'," +
+                        "'_blank')"
+                }, //}}}
+                opsservicelink: function(host, svc) { //{{{
+                    svc = svc.replace(/ /g, '+');
+                    return "window.open('" + nv.URL +
+                        "cgi-bin/extinfo.cgi?type=2&host=" + host +
+                        "&service=" + svc + "'," + "'_blank')"
+                }, //}}}
+                count_svc: function(n) { //{{{
+		    return n > 1 ? n + ' services' : n + ' service'
+		}, //}}}
+                hostdownlist: function(json) { //{{{
+                    var res = '';
+                    for (var i=0; i<json.length; i++) {
+                        var host = json[i];
+                        if (host.state == 'down') {
+                            //TODO res += host.name.colorize;
+                            res += host.name;
+                        }
+                    }
+                    return res;
+                }, //}}}
+                serviceproblemlist: function(json) { //{{{
+                    var res = "<dl class='popup'>";
+                    for (var i=0; i<json.length; i++) {
+                        var host = json[i];
+                        if (host.state == 'down') {
+                            res += "<dt style='color: red'>" + host.name + '</dt>';
+                        } else {
+                            res += '<dt>' + host.name + '</dt>';
+                        }
+                        for (var j=0; j<host.services.length; j++) {
+                            var svc = host.services[j];
+                            if (svc.acknowledged) res += '<dd>' +
+                                svc.name + ' (ack)</dd>';
+                            if (svc.downtime) res += '<dd>' +
+                                svc.name + ' (dt)</dd>';
+                        }
+                    }
+                    res += '</dl>';
+                    return res;
+                }, //}}}
+                update_stats_div: function() { //{{{
+                    var newdiv = document.createElement('div');
+                    var objBody = document.getElementsByTagName('body').item(0);
+                    newdiv.setAttribute('id', 'shandledsvcdiv');
+                    newdiv.setAttribute('class', 'tooltip');
+                    var shid = document.getElementById('shandledsvcdescr');
+                    var box = shid.getBoundingClientRect(); //TODO check if getb exs
+                    objBody.appendChild(newdiv);
+                    var shandledsvcdiv = document.getElementById('shandledsvcdiv');
+                    shandledsvcdiv.innerHTML = 
+                        nv.serviceproblemlist(nv.json.service.list);
+                    newdiv.style.display = 'block';
+                    newdiv.style.top  = (box.top - (newdiv.offsetHeight + 3)) + 'px';
+                    newdiv.style.left = (box.left - 20) + 'px';
+                    delete newdiv; delete box; delete objBody; delete shandledsvcdiv;
+                }, //}}}
+                delete_stats_div: function() { //{{{
+                    var shandledsvcdiv = document.getElementById('shandledsvcdiv');
+                    shandledsvcdiv.style.display = 'none';
+                    shandledsvcdiv.parentNode.removeChild(shandledsvcdiv);
+                    delete newdiv; delete box; delete objBody; delete shandledsvcdiv;
+                }, //}}}
+            }; //}}}
+            // Simple JavaScript Templating//{{{
+            // John Resig - http://ejohn.org/ - MIT Licensed
+            (function(){
+            var cache = {};
+            
+            this.tmpl = function tmpl(str, data){
+                // Figure out if we're getting a template, or if we need to
+                // load the template - and be sure to cache the result.
+                var fn = !/\W/.test(str) ?
+                  cache[str] = cache[str] ||
+                    tmpl(document.getElementById(str).innerHTML) :
+                
+                // Generate a reusable function that will serve as a template
+                // generator (and which will be cached).
+                new Function("obj",
+                    "var p=[],print=function(){p.push.apply(p,arguments);};" +
+                
+                    // Introduce the data as local variables using with(){}
+                    "with(obj){p.push('" +
+                
+                    // Convert the template into pure JavaScript
+                    str
+                    .replace(/[\r\t\n]/g, " ")
+                    .split("<%").join("\t")
+                    .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+                    .replace(/\t=(.*?)%>/g, "',$1,'")
+                    .split("\t").join("');")
+                    .split("%>").join("p.push('")
+                    .split("\r").join("\\'")
+                + "');}return p.join('');");
+            
+                // Provide some basic currying to the user
+                return data ? fn( data ) : fn;
+            };
+            })();//}}}
+            var bzzzt = function() { //{{{
+                var data;  
+                var random = Math.floor(Math.random() * 1000000)
+                var req = new XMLHttpRequest();
+                req.open('GET', nv.URL + 'api/status/service?filter=unhandled&includeunhandledhosts=1' + '&_=' + random, true);
+                req.setRequestHeader('Content-type', 'application/json');
+                req.onreadystatechange = function() {
+                    if (req.readyState == 4) {
+                        switch (req.status) {
+                        case 403:
+                            nv.log(req.statusText);
+                            window.setTimeout("window.location = nv.URL + 'login'", 2000);
+                            break;
+                        case 200:
+                            var error   = document.getElementById('error');
+                            var overlay = document.getElementById('overlay');
+                            if (overlay != null) {
+                                overlay.parentNode.removeChild(error);
+                                overlay.parentNode.removeChild(overlay);
+                            }
+
+                            data = eval('(' + req.responseText + ')');
+                            data.service.list.sort(function(a, b) {
+                                // TODO host mit mehrern kaputten services ebenfalls abhandeln
+                                return a.services[0].state_duration -
+                                    b.services[0].state_duration
+                            });
+                            var objBody = document.getElementsByTagName('body').item(0);
+                            var old = document.getElementById('bzzzt');
+                            if (old != null) {
+                                old.parentNode.removeChild(old);
+                                delete old;
+                            }
+                            var newdiv = document.createElement('div');
+                            newdiv.setAttribute('id', 'bzzzt');
+                            objBody.appendChild(newdiv);
+                            var results = document.getElementById('bzzzt');
+
+                            results.innerHTML = data.service.list.length == 0 ?
+                                "<div id='idle'>* * *</div>" : tmpl('unhandled_tmpl', data);
+                            break;
+                        default:
+                            //overlay
+                            var overlay = document.getElementById('overlay');
+                            if (overlay == null) {
+                                var objBody = document.getElementsByTagName('body').item(0);
+                                var newdiv = document.createElement('div');
+                                newdiv.setAttribute('id', 'overlay');
+                                newdiv.style.height = window.innerHeight + 'px';
+                                newdiv.style.width  = window.innerWidth + 'px';
+                                objBody.appendChild(newdiv);
+
+                                newdiv = document.createElement('div');
+                                newdiv.setAttribute('id', 'error');
+                                newdiv.style.left = 
+                                    Math.floor(window.innerWidth / 2) - 256 + 'px';
+                                newdiv.innerHTML = 'Opsview connection timed out';
+                                objBody.appendChild(newdiv);
+                            }
+                            break;
+                        }
+                    }
+                    delete data; delete results; delete newdiv; delete random;
+                    delete req; delete overlay; delete error;
+                }
+                req.send(null);
+            } //}}}
+            bzzzt();
+            window.setInterval(bzzzt, 3000);
+            var bzzzt_stats = function() { //{{{
+                var json;  
+                var random = Math.floor(Math.random() * 1000000)
+                var sreq = new XMLHttpRequest();
+                sreq.open('GET', nv.URL + 'api/status/service?state=2&state=1&state=3&includeunhandledhosts=1' + '&_=' + random, true);
+                sreq.setRequestHeader('Content-type', 'application/json');
+                sreq.onreadystatechange = function () {
+                    if (sreq.readyState == 4) {
+                        json = eval('(' + sreq.responseText + ')');
+                        nv.json = json;
+                        var objBody = document.getElementsByTagName('body').item(0);
+
+                        var old = document.getElementById('stats');
+                        if (old != null) {
+                            old.parentNode.removeChild(old);
+                            delete old;
+                        }
+                        var newdiv = document.createElement('div');
+                        newdiv.setAttribute('id', 'stats');
+                        objBody.appendChild(newdiv);
+                        var results = document.getElementById('stats');
+
+                        results.innerHTML = tmpl('stats_tmpl', json);
+                        
+                        var shid = document.getElementById('shandledsvcdescr');
+                        shid.removeEventListener('mouseover', nv.update_stats_div, false)
+                        shid.removeEventListener('mouseout', nv.delete_stats_div, false)
+
+                        var shandledsvcdiv = document.getElementById('shandledsvcdiv');
+                        if (shandledsvcdiv != null) {
+                            shandledsvcdiv.parentNode.removeChild(shandledsvcdiv);
+                            delete shandledsvcdiv;
+                        }
+                        shid.addEventListener('mouseover', nv.update_stats_div, false);
+                        shid.addEventListener('mouseout', nv.delete_stats_div, false);
+                    }
+                    delete json;   delete results; delete newdiv; delete shid;
+                    delete random; delete sreq;    delete error;
+                }
+                sreq.send(null);
+            } //}}}
+            bzzzt_stats();
+            window.setInterval(bzzzt_stats, 30000);
+            /* ]]> */
+        </script>
+        <style> /* {{{ */
+            body { /* {{{ */
+                background-color: #121315;
+                color: #fff;
+                margin-left: 10px;
+                margin-right: 15px;
+            }
+
+            .host {
+                width: 100%;
+                margin-top: 10px;
+                border: 2px solid #666;
+                background-color: #101010;
+                -webkit-border-radius: 8px;
+                -moz-border-radius: 8px;
+                font-family: Arial;
+            }
+
+            .hostname {
+                font-weight: bold;
+                font-family: Helvetica;
+                font-size: x-large;
+                margin-left: 5px;
+                float: left;
+                color: #ccc;
+                cursor: pointer;
+                width: 100%;
+            }
+
+            .services {
+                -webkit-border-radius: 4px;
+                -moz-border-radius: 4px;
+                background-color: #555;
+            }
+
+            .warning { 
+                padding: 3px;
+                overflow: hidden;
+                border-top: 2px solid #1f2223;
+            }
+            .critical { 
+                padding: 3px;
+                overflow: hidden;
+                border-top: 2px solid #1f2223;
+            }
+            .unknown { 
+                padding: 3px;
+                border-top: 2px solid #1f2223;
+                overflow: hidden;
+            }
+            .ok { 
+                padding: 3px;
+                border-top: 2px solid #1f2223;
+                overflow: hidden;
+            }
+
+            .servicename, .duration, .attempt, .lastcheck, .output {
+                float: left;
+                font-family: Helvetica;
+                padding: 3px;
+                width: 100%;
+                color: #ddd;
+                max-height: 6em;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+            }
+            .servicename {
+                cursor: pointer;
+                width: 300px;
+            }
+            .warning .servicename { 
+                font-weight: bold;
+                background-color: #948500;
+            }
+            .critical .servicename { 
+                font-weight: bold;
+                background-color: #953232;
+            }
+            .unknown .servicename { 
+                font-weight: bold;
+                color: #bbb;
+                background-color: #615d00;
+            }
+            .ok .servicename { 
+                font-weight: bold;
+                color: #ccc;
+                background-color: #005d00;
+            }
+
+            .duration { 
+                width: 10em;
+                text-align: center;
+                font-weight: bold;
+                color: #ccc;
+            }
+
+            .attempt { 
+                padding-right: 2em;
+                width: auto;
+                font-weight: bold;
+                color: #ccc;
+            }
+
+            .lastcheck { 
+                width: 10em; 
+            }
+            .output { 
+                width: 40em;
+                font-weight: bold;
+                color: #ccc;
+                overflow: hidden;
+            }
+
+            #log {  }
+
+            .clearboth { clear: both; }
+
+            #handled, #unhandled {
+                float: right;
+                font-weight: bold;
+                font-size: x-large;
+                font-family: monospace !important;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                padding-right: 2px;
+                padding-left: 2px;
+                margin-right: 3em;
+                margin-top: 2px;
+                margin-bottom: 2px;
+            }
+
+            #datetime, #hours, #minutes, #colon {
+                font-size: x-large;
+                font-weight: bold;
+                font-family: monospace !important;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                float: left;
+            }
+            #hours, #minutes { 
+                background-color: #7F5917; 
+                padding-left: 3px;
+                padding-right: 3px;
+            }
+            #datetime { 
+                margin-left: 3em; 
+            }
+
+            #handled {
+                background-color: #4E6F4C;
+            }
+            #unhandled {
+                background-color: #6F455A;
+            }
+
+            .hostlink a {
+                color: #444;
+                font-weight: normal;
+                text-decoration: none;
+            }
+            .hostlink a:hover {
+                font-weight: bolder;
+                color: #bbb;
+                cursor: pointer;
+            }
+
+            #error {
+                position: absolute;
+                padding: 30px;
+                top: 45%;
+                font-size: 30px;
+                text-align: center;
+                font-weight: bolder;
+                font-family: Helvetica !important;
+                color: black;
+                z-index: 30;
+                background-color: #ddd;
+                border: 10px solid #444;
+                -webkit-border-radius: 15px;
+                -moz-border-radius: 15px;
+            }
+            #overlay {
+                background-color: #aaa;
+                position: fixed; 
+                top: 0px; 
+                left: 0px; 
+                opacity: 0.5; 
+                z-index: 10; 
+            } /* }}} */
+
+            #stats { /* {{{ */
+                position: fixed;
+                bottom: 0px;
+                left: 33%;
+                padding-bottom: 3px;
+                background-color: #666;
+                border-top: 2px solid #444;
+                border-left: 2px solid #444;
+                border-right: 2px solid #444;
+                -moz-border-radius-topleft: 8px;
+                -webkit-border-radius-topright: 8px;
+                -moz-border-radius-topright: 8px;
+                -webkit-border-radius-topleft: 8px;
+            }
+            #statcounter {
+                font-family: Helvetica;
+                list-style-type: none;
+                display: inline; 
+                font-size: 12px;
+                color: #ccc;
+                padding-top: 5px;
+                padding-right: 15px;
+                padding-left: 15px;
+                padding-bottom: 1px;
+            }
+            #statcounter li { 
+                display: inline; 
+            }
+            #shostcounter, #shandledsvccounter, #sunhandledsvccounter {
+                font-family: monospace;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                text-align: center;
+                padding-left: 3px;
+                padding-right: 3px;
+            }
+            #shostcounter {
+                background-color: #953232;
+                border: 1px solid #ff5555;
+                margin-left: 5px;
+            }
+            #shandledsvccounter {
+                background-color: #238876;
+                border: 1px solid #29c38a;
+                margin-left: 15px;
+            }
+            #sunhandledsvccounter {
+                background-color: #948500;
+                border: 1px solid #e7c922;
+                margin-left: 15px;
+            }
+
+            dl.popup {
+                margin: 0;
+                max-width: 50em;
+                padding: 0;
+            }
+            .popup dt {
+                border-top: 1px dotted #555;
+                min-width: 15em;
+                color: #ccc;
+            }
+            dt { clear: both; }
+            .popup dd {
+                color: #ddd;
+            }
+
+            .tooltip {
+                position: fixed;
+                display: none;
+                background-color: #FFFFFF;
+            }
+            #shandledsvcdiv {
+                border: 1px solid #555;
+                background-color: #222;
+                color: #ddd;
+                font-size: small;
+                font-weight: bold;
+                font-family: Helvetica;
+                padding: 4px;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+            }
+            #shandledsvcdescr {
+                cursor: pointer;
+            }
+            
+            .hostdown {
+                list-style-type: none;
+                display: inline;
+            }
+            .hostdown li {
+                display: inline; 
+            }
+            .hdn {
+                background-color: #ac3737;
+                margin-left: -5px;
+                padding-left: 5px;
+                display: block;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                width: 305px;
+                float: left;
+            }
+            .hdd {
+                display: block;
+                font-size: large;
+                font-weight: bold;
+                text-align: center;
+                width: 10em;
+            }
+            .hdo {
+                padding-left: 75px;
+                font-size: small;
+                font-weight: normal;
+                width: 40em;
+            } /* }}} */
+
+            #idle {
+                font-size: 40px;
+                text-align: center;
+                color: #aaa;
+            }
+
+            .atp {
+                -moz-border-radius: 2px;
+                -webkit-border-radius: 2px;
+                border: 1px solid #999;
+                background-color: #111;
+                margin-left: 2px;
+            }
+
+        </style> <!--}}}-->
+        <script type="text/html" id="unhandled_tmpl"> <!--{{{-->
+            <% for (i=0; i<service.list.length; i++) { %>
+                <% var host = service.list[i]; %>
+                <div class="host">
+                    <div class="hostname" onclick=<%= nv.opshostlink(host.name) %>>
+                        <% if (host.state != "up") { %>
+                            <ul class="hostdown" > 
+                                <li class="hdn"><%= host.name %></li>
+                                <li class="hdd"><%= nv.s_to_d(host.state_duration) %></li>
+                                <!-- <li class="hdo"><%= host.output %></li> -->
+                            </ul>
+                        <% } else { %>
+                            <%= host.name %>
+                        <% } %>
+                    </div>
+
+                    <br class="clearboth">
+
+                    <div class="services" id="<%= nv.clean(host.name) %>">
+                    <% if (host.state == "up") { %>
+                        <% for (j=0; j<host.services.length; j++) { %>
+                            <% var svc = host.services[j]; %>
+                            <% switch (svc.state) {
+                               case "ok": %>
+                                <div class="ok">       <% break; %>
+                            <% case "warning": %>
+                                <div class="warning">  <% break; %>
+                            <% case "critical": %>
+                                <div class="critical"> <% break; %>
+                            <% case "unknown": %>
+                                <div class="unknown">  <% break; %>
+                            <% } %>
+                                <div class="servicename" onclick=<%= 
+                                        nv.opsservicelink(host.name, svc.name) %>> 
+                                    <%= svc.name %>
+                                </div>
+                                <div class="duration">
+                                    <%= nv.s_to_d(svc.state_duration) %>
+                                </div>
+                                <div class="attempt">
+                                    <%= nv.print_attempt(
+                                            svc.current_check_attempt,
+                                            svc.max_check_attempts) %>
+                                </div>
+                                <div class="lastcheck">
+                                    <%= svc.last_check %>
+                                </div>
+                                <div class="output">
+                                    <%= svc.output %>
+                                </div>
+                            </div>
+                        <% } %>
+                    <% } %>
+                    </div>
+                </div>
+            <% } %>
+        </script> <!--}}}-->
+        <script type="text/html" id="stats_tmpl"> <!-- {{{ -->
+            <ul id="statcounter">
+                <li id="shostcounter"><%= service.summary.host.down || 0 %></li>
+                <li id="shostdescr"><%= service.summary.host.down == 1 ? "host" : "hosts"%> down</li>
+                <li id="shandledsvccounter"><%= service.summary.service.handled %></li>
+                <li id="shandledsvcdescr">handled <%= service.summary.service.handled == 1 ? 
+                    "service" : "services"%></li>
+                <li id="sunhandledsvccounter"><%= service.summary.service.unhandled %></li>
+                <li id="sunhandledsvcdescr">unhandled <%= service.summary.service.unhandled == 1 ? 
+                    "service" : "services"%></li>
+            </ul>
+        </script> <!-- }}} -->
+    </head>
+
+    <body>
+        <div id="log"></div>
+        <div id="bzzzt"></div>
+        <div id="stats"></div>
+    </body>
+</html>
