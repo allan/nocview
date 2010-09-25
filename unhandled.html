@@ -261,6 +261,8 @@
         </script>
         <style> /* {{{ */
             body { /* {{{ */
+                font-family: Helvetica,sans-serif;
+                font-weight: bold;
                 background-color: #121315;
                 color: #fff;
                 margin-left: 10px;
@@ -268,22 +270,24 @@
             }
 
             .host {
+                font-size: smaller;
                 width: 100%;
                 margin-top: 10px;
-                border: 2px solid #666;
-                background-color: #101010;
+                background-color: #333;
                 -webkit-border-radius: 8px;
                 -moz-border-radius: 8px;
-                font-family: Arial;
+                background: -moz-linear-gradient(top, #555, #202020);
+                background: -webkit-gradient(
+                  linear, left bottom, left top,
+                  from(#333), to(#272727)
+                );
             }
 
             .hostname {
-                font-weight: bold;
-                font-family: Helvetica;
-                font-size: x-large;
                 margin-left: 5px;
+                font-size: large;
                 float: left;
-                color: #ccc;
+                color: #bbb;
                 cursor: pointer;
                 width: 100%;
             }
@@ -291,25 +295,31 @@
             .services {
                 -webkit-border-radius: 4px;
                 -moz-border-radius: 4px;
+                background-color: #333;
+                background: -moz-linear-gradient(top, #444, #202020);
+                background: -webkit-gradient(
+                  linear, left bottom, left top,
+                  from(#454545), to(#333)
+                );
                 background-color: #555;
             }
 
-            .warning { 
+            .warning {
                 padding: 3px;
                 overflow: hidden;
                 border-top: 2px solid #1f2223;
             }
-            .critical { 
+            .critical {
                 padding: 3px;
                 overflow: hidden;
                 border-top: 2px solid #1f2223;
             }
-            .unknown { 
+            .unknown {
                 padding: 3px;
                 border-top: 2px solid #1f2223;
                 overflow: hidden;
             }
-            .ok { 
+            .ok {
                 padding: 3px;
                 border-top: 2px solid #1f2223;
                 overflow: hidden;
@@ -317,7 +327,6 @@
 
             .servicename, .duration, .attempt, .lastcheck, .output {
                 float: left;
-                font-family: Helvetica;
                 padding: 3px;
                 width: 100%;
                 color: #ddd;
@@ -330,20 +339,30 @@
                 width: 300px;
             }
             .warning .servicename { 
-                font-weight: bold;
                 background-color: #948500;
+                background: -moz-linear-gradient(top, #948500, #6d6200);
+                background: -webkit-gradient(
+                  linear, left bottom, left top,
+                  from(#948500), to(#6d6200)
+                );
             }
             .critical .servicename { 
-                font-weight: bold;
                 background-color: #953232;
+                background: -moz-linear-gradient(top, #953232, #6a2323);
+                background: -webkit-gradient(
+                  linear, left bottom, left top,
+                  from(#953232), to(#6a2323)
+                );
             }
             .unknown .servicename { 
-                font-weight: bold;
-                color: #bbb;
                 background-color: #615d00;
+                background: -moz-linear-gradient(top, #615d00, #202020);
+                background: -webkit-gradient(
+                  linear, left bottom, left top,
+                  from(#494700), to(#615d00)
+                );
             }
             .ok .servicename { 
-                font-weight: bold;
                 color: #ccc;
                 background-color: #005d00;
             }
@@ -351,14 +370,13 @@
             .duration { 
                 width: 10em;
                 text-align: center;
-                font-weight: bold;
                 color: #ccc;
             }
 
             .attempt { 
                 padding-right: 2em;
                 width: auto;
-                font-weight: bold;
+                min-width: 2em;
                 color: #ccc;
             }
 
@@ -366,10 +384,15 @@
                 width: 10em; 
             }
             .output { 
-                width: 40em;
-                font-weight: bold;
-                color: #ccc;
+                font-weight: normal;
+                color: #bbb;
+                width: auto;
                 overflow: hidden;
+            }
+
+            .hostalias {
+                color: #888;
+                margin-left: 1em;
             }
 
             #log {  }
@@ -378,8 +401,6 @@
 
             #handled, #unhandled {
                 float: right;
-                font-weight: bold;
-                font-size: x-large;
                 font-family: monospace !important;
                 -webkit-border-radius: 5px;
                 -moz-border-radius: 5px;
@@ -437,19 +458,18 @@
                 bottom: 0px;
                 left: 33%;
                 padding-bottom: 3px;
-                background-color: #666;
+                background-color: #333;
                 border-top: 2px solid #444;
                 border-left: 2px solid #444;
                 border-right: 2px solid #444;
                 -moz-border-radius-topleft: 8px;
-                -webkit-border-radius-topright: 8px;
+                -webkit-border-top-right-radius: 8px;
                 -moz-border-radius-topright: 8px;
-                -webkit-border-radius-topleft: 8px;
+                -webkit-border-top-left-radius: 8px;
             }
             #statcounter {
-                font-family: Helvetica;
                 list-style-type: none;
-                display: inline; 
+                display: inline;
                 font-size: 12px;
                 color: #ccc;
                 padding-top: 5px;
@@ -457,8 +477,8 @@
                 padding-left: 15px;
                 padding-bottom: 1px;
             }
-            #statcounter li { 
-                display: inline; 
+            #statcounter li {
+                display: inline;
             }
             #shostcounter, #shandledsvccounter, #sunhandledsvccounter {
                 font-family: monospace;
@@ -528,7 +548,14 @@
             }
             .hdn {
                 background-color: #ac3737;
+                border: 2px solid red;
+                background: -moz-linear-gradient(top, #953232, #d24242);
+                background: -webkit-gradient(
+                  linear, left bottom, left top,
+                  from(#953232), to(#d24242)
+                );
                 margin-left: -5px;
+                color: #ddd;
                 padding-left: 5px;
                 display: block;
                 -webkit-border-radius: 5px;
@@ -537,17 +564,20 @@
                 float: left;
             }
             .hdd {
-                display: block;
-                font-size: large;
+                color: #ddd;
                 font-weight: bold;
+                font-size: small;
                 text-align: center;
-                width: 10em;
+            }
+            .hda {
+                font-weight: normal;
+                font-size: small;
             }
             .hdo {
-                padding-left: 75px;
                 font-size: small;
                 font-weight: normal;
-                width: 40em;
+                width: auto;
+                overflow: hidden;
             } /* }}} */
 
             #idle {
@@ -574,10 +604,13 @@
                             <ul class="hostdown" > 
                                 <li class="hdn"><%= host.name %></li>
                                 <li class="hdd"><%= nv.s_to_d(host.state_duration) %></li>
-                                <!-- <li class="hdo"><%= host.output %></li> -->
+                                <!-- <li class="hdo"><%= host.output || "" %></li> -->
                             </ul>
                         <% } else { %>
                             <%= host.name %>
+                            <% if (host.alias) { %>
+                                <span class="hostalias"><%= host.alias %></span>
+                            <% } %>
                         <% } %>
                     </div>
 
@@ -608,9 +641,6 @@
                                     <%= nv.print_attempt(
                                             svc.current_check_attempt,
                                             svc.max_check_attempts) %>
-                                </div>
-                                <div class="lastcheck">
-                                    <%= svc.last_check %>
                                 </div>
                                 <div class="output">
                                     <%= svc.output %>
