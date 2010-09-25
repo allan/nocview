@@ -3,7 +3,6 @@
     <head>
         <title>nocview</title>
         <script type="text/javascript">
-            /* <![CDATA[ */
             var nv = { //{{{
                 URL: '/',
                 s_to_d: function(seconds) { //{{{
@@ -19,47 +18,11 @@
                     seconds == 0 || date.push(seconds + 's')
                     return date.join(' ')
                 }, //}}}
-                methods : function(obj) { //{{{
-                    var propList = '';
-                    for(var propName in obj) {
-                        if(typeof(obj[propName]) != 'undefined') {
-                            propList += (propName + ', ');
-                        }
-                    };
-                    return (propList);
-                }, //}}}
                 log: function(message) { //{{{
                     document.getElementById('log').innerHTML = '<pre>-' + message + '-</pre>';
                 }, //}}}
-                ap: function(ary) { //{{{
-                    for (var i = 0; i < ary.length; i += 1) {
-                        nv.log('ary['+i+']: ' + ary[i]);
-                    };
-                }, //}}}
-                pp: function(pro) { //{{{
-                    var p;
-                    for (p in pro) {
-                        nv.log('pros: '+p);
-                    }
-                }, //}}}
                 clean: function(name) { //{{{
                     return(name.replace(/[^a-zA-Z0-9\-]/g, '_'));
-                }, //}}}
-                show_clock: function() { //{{{
-                    var currentDate = new Date();
-                    var day = currentDate.getDate();
-                    var month = currentDate.getMonth();
-                    var year = currentDate.getFullYear();
-                    var hours = currentDate.getHours();
-                    var minutes = currentDate.getMinutes();
-
-                    if (minutes < 10) {
-                        minutes = "0" + minutes
-                    };
-                        
-                    return "<div id='hours'>"   + hours   + "</div>" +
-                        "<div id='colon'>"   + ":"     + "</div>" +
-                        "<div id='minutes'>" + minutes + "</div>"
                 }, //}}}
                 print_attempt: function(attempt, max) { //{{{
                     var range = parseInt('0xb40000') - parseInt('0xb400');
@@ -91,8 +54,8 @@
                         "&service=" + svc + "'," + "'_blank')"
                 }, //}}}
                 count_svc: function(n) { //{{{
-		    return n > 1 ? n + ' services' : n + ' service'
-		}, //}}}
+                    return n > 1 ? n + ' services' : n + ' service'
+                }, //}}}
                 hostdownlist: function(json) { //{{{
                     var res = '';
                     for (var i=0; i<json.length; i++) {
@@ -251,8 +214,9 @@
             } //}}}
             bzzzt();
             window.setInterval(bzzzt, 3000);
+
             var bzzzt_stats = function() { //{{{
-                var json;  
+                var json;
                 var random = Math.floor(Math.random() * 1000000)
                 var sreq = new XMLHttpRequest();
                 sreq.open('GET', nv.URL + 'api/status/service?state=2&state=1&state=3&includeunhandledhosts=1' + '&_=' + random, true);
@@ -274,7 +238,7 @@
                         var results = document.getElementById('stats');
 
                         results.innerHTML = tmpl('stats_tmpl', json);
-                        
+
                         var shid = document.getElementById('shandledsvcdescr');
                         shid.removeEventListener('mouseover', nv.update_stats_div, false)
                         shid.removeEventListener('mouseout', nv.delete_stats_div, false)
@@ -294,7 +258,6 @@
             } //}}}
             bzzzt_stats();
             window.setInterval(bzzzt_stats, 30000);
-            /* ]]> */
         </script>
         <style> /* {{{ */
             body { /* {{{ */
@@ -427,23 +390,6 @@
                 margin-bottom: 2px;
             }
 
-            #datetime, #hours, #minutes, #colon {
-                font-size: x-large;
-                font-weight: bold;
-                font-family: monospace !important;
-                -webkit-border-radius: 5px;
-                -moz-border-radius: 5px;
-                float: left;
-            }
-            #hours, #minutes { 
-                background-color: #7F5917; 
-                padding-left: 3px;
-                padding-right: 3px;
-            }
-            #datetime { 
-                margin-left: 3em; 
-            }
-
             #handled {
                 background-color: #4E6F4C;
             }
@@ -572,7 +518,7 @@
             #shandledsvcdescr {
                 cursor: pointer;
             }
-            
+
             .hostdown {
                 list-style-type: none;
                 display: inline;
