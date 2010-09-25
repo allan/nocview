@@ -255,9 +255,43 @@
                     delete random; delete sreq;    delete error;
                 }
                 sreq.send(null);
+
+                var oreq = new XMLHttpRequest();
+                oreq.open('POST', nv.URL + 'admin/status/opsview');
+                oreq.onreadystatechange = function () {
+                    if (oreq.readyState == 4) {
+                        var s1re = /<status>(\d+)<\/status>/
+                          , s2re = /<configuration>(\w+)<\/configuration>/
+                          , s1 = s1re.exec(oreq.responseText)[1]
+                          , s2 = s2re.exec(oreq.responseText)[1]
+                          , objBody = document.getElementsByTagName('body').item(0)
+                          , old = document.getElementById('flash')
+
+                        if (old) {
+                            old.parentNode.removeChild(old);
+                            delete old;
+                        }
+                        if (parseInt(s1) !== 0 || s2 !== "uptodate") {
+                            var newdiv = document.createElement('div');
+                            newdiv.setAttribute('id', 'flash');
+                            objBody.appendChild(newdiv);
+                            var results = document.getElementById('flash');
+                            var status = 'unknown';
+                            switch (parseInt(s1)) {
+                                case 0: status = 'OK'; break;
+                                case 1: status = 'warning'; break;
+                                case 2: status = 'critical'; break;
+                            }
+                            results.innerHTML = "Opsview: "
+                                + status + ", config: "+s2;
+                        }
+                    }
+                    delete results; delete newdiv; delete oreq; delete old; delete objBody;
+                }
+                oreq.send(null);
             } //}}}
             bzzzt_stats();
-            window.setInterval(bzzzt_stats, 30000);
+            window.setInterval(bzzzt_stats, 7000);
         </script>
         <style> /* {{{ */
             body { /* {{{ */
@@ -593,6 +627,23 @@
                 background-color: #111;
                 margin-left: 2px;
             }
+
+            #flash {
+                position: fixed;
+                top: 0px;
+                right: 0px;
+                text-align: center;
+                -moz-border-radius: 0px 0px 4px 4px;
+                -webkit-border-radius: 0px 0px 4px 4px;
+                background-color: #888;
+                color: black;
+                border-bottom: 2px solid #aaa;
+                border-left: 2px solid #aaa;
+                border-right: 2px solid #aaa;
+                padding: 4px;
+                margin-right: 1em;
+            }
+
 
         </style> <!--}}}-->
         <script type="text/html" id="unhandled_tmpl"> <!--{{{-->
