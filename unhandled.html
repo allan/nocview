@@ -225,7 +225,7 @@
                     if (sreq.readyState == 4) {
                         json = eval('(' + sreq.responseText + ')');
                         nv.json = json;
-                        var objBody = document.getElementsByTagName('body').item(0);
+                        var swrap = document.getElementById('statswrapper');
 
                         var old = document.getElementById('stats');
                         if (old != null) {
@@ -234,7 +234,7 @@
                         }
                         var newdiv = document.createElement('div');
                         newdiv.setAttribute('id', 'stats');
-                        objBody.appendChild(newdiv);
+                        swrap.appendChild(newdiv);
                         var results = document.getElementById('stats');
 
                         results.innerHTML = tmpl('stats_tmpl', json);
@@ -487,10 +487,16 @@
                 z-index: 10; 
             } /* }}} */
 
-            #stats { /* {{{ */
+            #statswrapper { /* {{{ */
                 position: fixed;
                 bottom: 0px;
-                left: 33%;
+                right: 50%;
+                width: 470px;
+            }
+            #stats {
+                left: 50%;
+                position: relative;
+                width: 470px;
                 padding-bottom: 3px;
                 background-color: #333;
                 border-top: 2px solid #444;
@@ -720,6 +726,8 @@
     <body>
         <div id="log"></div>
         <div id="bzzzt"></div>
-        <div id="stats"></div>
+        <div id="statswrapper">
+            <div id="stats"></div>
+        </div>
     </body>
 </html>
