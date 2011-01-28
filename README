@@ -1,9 +1,0 @@
-Description: A single html file that uses the Opsview API to display
-all unhandled problems nicely.
-
-Usage: Put this file in your Nagios share directory, for example
-'/usr/local/nagios/share/'.  It should now be accessible via browser
-with 'http://your.opsview.webserver/unhandled.html'.  If you haven't
-already logged in to Opsview, you will be redirected to the login,
-after which you can return to unhandled.html with the proper rights
-to access the Opsview JSON API.
