@@ -6,7 +6,11 @@ unhandled problems nicely.
 
 ### Installation
 
-  * Put this file in your Nagios share directory, for example
+  * Clone the repository
+
+        $ git clone http://allan.de/src/nocview
+
+    Put `unhandled.html` in your Nagios share directory, for example
     `/usr/local/nagios/share/`.  It should now be accessible via browser
     with `http://your.opsview.webserver/unhandled.html`.  If you haven't
     already logged in to Opsview, you will be redirected to the login,
